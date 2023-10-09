@@ -12,10 +12,9 @@ export default function Dealer({ params }: {
     setWs(websocket);
 
     websocket.onmessage = (event) => {
-      setMessage(event.data);  // メッセージを受け取ったときに状態を更新
+      setMessage(event.data);
     };
 
-    // Clean up the WebSocket connection when the component is unmounted
     return () => {
       websocket.close();
     };

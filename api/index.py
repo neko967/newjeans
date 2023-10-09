@@ -44,12 +44,11 @@ connections: List[WebSocket] = []
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    connections.append(websocket)  # 新しい接続をリストに追加
+    connections.append(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            for connection in connections:  # すべての接続にメッセージをブロードキャスト
+            for connection in connections:
                 await connection.send_text(f"Message text was: {data}")
     except:
-        # エラーが発生した場合、またはクライアントが切断した場合、接続をリストから削除
         connections.remove(websocket)
