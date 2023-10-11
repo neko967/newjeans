@@ -1,24 +1,35 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function Dealer({ params }: {
-  params: { slug: string },
-}) {
-  const [ws, setWs] = useState(null);
+export default function Dealer({ params }: { params: { slug: string } }) {
+  const [ws, setWs] = useState<WebSocket | null>(null);
   const [message, setMessage] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
-    const websocket = new WebSocket('ws://localhost:8000/ws');
-    setWs(websocket);
+    async function checkRoomExists() {
+      const res = await fetch(`/api/room-exists/${params.slug}`);
+      const data = await res.json();
 
-    websocket.onmessage = (event) => {
-      setMessage(event.data);
-    };
+      if (!data.exists) {
+        router.push('/waiting_room');
+      } else {
+        const websocket = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}/${params.slug}`);
+        setWs(websocket);
 
-    return () => {
-      websocket.close();
-    };
-  }, []);
+        websocket.onmessage = (event) => {
+          setMessage(event.data);
+        };
+
+        return () => {
+          websocket.close();
+        };
+      }
+    }
+
+    checkRoomExists();
+  }, [params.slug]);
 
   const sendMessage = () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
