@@ -31,6 +31,13 @@ async def join_room(room_id: int, request: Request):
                 return {"name": room.name, "message": "Successfully joined the room"}
     raise HTTPException(status_code=404, detail="Room not found")
 
+@app.get("/api/room-exists/{name}")
+async def room_exists(name: str):
+    for room in rooms:
+        if room.name == name:
+            return {"exists": True, "requiresPassword": bool(room.password)}
+    return {"exists": False, "requiresPassword": False}
+
 # @app.websocket("/ws")
 # async def websocket_endpoint(websocket: WebSocket):
 #     await websocket.accept()
