@@ -15,7 +15,7 @@ export default function Dealer({ params }: { params: { slug: string } }) {
       if (!data.exists) {
         router.push('/waiting_room');
       } else {
-        const websocket = new WebSocket(process.env.NEXT_PUBLIC_WEBSOCKET_URL!);
+        const websocket = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}/${params.slug}`);
         setWs(websocket);
 
         websocket.onmessage = (event) => {
@@ -29,7 +29,7 @@ export default function Dealer({ params }: { params: { slug: string } }) {
     }
 
     checkRoomExists();
-  }, []);
+  }, [params.slug]);
 
   const sendMessage = () => {
     if (ws && ws.readyState === WebSocket.OPEN) {

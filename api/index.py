@@ -63,16 +63,23 @@ async def leave_room(request: Request):
 #         await websocket.send_text(f"Message text was: {data}")
 
 # 接続しているすべてのWebSocketを保持するリスト
+
+class Connection:
+    def __init__(self, websocket: WebSocket, room: str):
+        self.websocket = websocket
+        self.room = room
+
 connections: List[WebSocket] = []
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/ws/{room}")
+async def websocket_endpoint(websocket: WebSocket, room: str):
     await websocket.accept()
-    connections.append(websocket)
+    conn = Connection(websocket, room)
+    connections.append(conn)
     try:
         while True:
             data = await websocket.receive_text()
-            for connection in connections:
-                await connection.send_text(f"Message text was: {data}")
+            for connection in [c for c in connections if c.room == room]:
+                await connection.websocket.send_text(f"Message text was: {data}")
     except:
-        connections.remove(websocket)
+        connections.remove(conn)
