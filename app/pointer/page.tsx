@@ -1,70 +1,109 @@
 "use client"
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Image from "next/image";
+import localImage from "../../public/3.png";
 
-type GameStatus = 'playing' | 'lost' | 'won';
-type Position = { x: number; y: number };
+type Position = {
+  x: number;
+  y: number;
+};
 
 export default function Page() {
-  // 迷路のデザインとゲームのステータス
-  const maze = [
-    [2, 1, 0, 0],
-    [0, 1, 1, 0],
-    [0, 0, 1, 0],
-    [0, 1, 1, 3],
-  ];
-  
-  const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
-  const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
+  const [playerPosition, setPlayerPosition] = useState<Position>({ x: 0, y: 0 });
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [isGameClear, setIsGameClear] = useState(false);
 
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (gameStatus !== 'playing') return;
-
-      let newX = playerPos.x;
-      let newY = playerPos.y;
-
-      if (e.key === 'ArrowUp' && newY > 0) newY--;
-      else if (e.key === 'ArrowDown' && newY < maze.length - 1) newY++;
-      else if (e.key === 'ArrowLeft' && newX > 0) newX--;
-      else if (e.key === 'ArrowRight' && newX < maze[0].length - 1) newX++;
-
-      if (maze[newY][newX] === 1) {
-        setPlayerPos({ x: newX, y: newY });
-      } else if (maze[newY][newX] === 3) {
-        setGameStatus('won');
-      } else if (maze[newY][newX] === 0) {
-        setGameStatus('lost');
-      }
+    // 音声を再生する関数
+    const playGameOverSound = () => {
+      const sound = new Audio("/aaaa.wav");
+      sound.play();
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [playerPos, gameStatus, maze]);
+  useEffect(() => {
+    // Move cursor to the starting position
+    const startPosition = document.querySelector('[data-start]');
+    if (startPosition) {
+      startPosition.dispatchEvent(new MouseEvent('mousemove', {
+        clientX: startPosition.getBoundingClientRect().left + 20,  // Center the cursor
+        clientY: startPosition.getBoundingClientRect().top + 20,   // Center the cursor
+        bubbles: true
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isGameOver) {
+      playGameOverSound();
+    }
+  }, [isGameOver]);
+
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / 40);
+    const y = Math.floor((e.clientY - rect.top) / 40);
+
+    if (maze[y][x] === '#') {
+      setIsGameOver(true);
+    } else if (maze[y][x] === 'G') {
+      setIsGameClear(true);
+    } else {
+      setPlayerPosition({ x, y });
+    }
+  };
+
+  const maze = [
+    ['S', ' ', ' ', ' ', '#', '#', '#', '#', '#'],
+    ['#', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#'],
+    ['#', ' ', '#', '#', '#', '#', '#', ' ', '#'],
+    ['#', ' ', '#', ' ', ' ', ' ', '#', ' ', '#'],
+    ['#', ' ', '#', ' ', '#', ' ', '#', ' ', '#'],
+    ['#', ' ', '#', ' ', '#', ' ', '#', ' ', '#'],
+    ['#', ' ', '#', ' ', '#', ' ', ' ', ' ', '#'],
+    ['#', ' ', ' ', ' ', '#', '#', '#', 'G', '#'],
+    ['#', '#', '#', '#', '#', '#', '#', '#', '#']
+  ];
 
   return (
     <main>
-      {maze.map((row, y) => (
-        <div key={y}>
-          {row.map((cell, x) => {
-            if (playerPos.x === x && playerPos.y === y) {
-              return <span key={x} style={{ background: 'blue', display: 'inline-block', width: '20px', height: '20px' }}></span>;
-            }
-            switch (cell) {
-              case 0:
-                return <span key={x} style={{ background: 'black', display: 'inline-block', width: '20px', height: '20px' }}></span>;
-              case 1:
-                return <span key={x} style={{ background: 'white', display: 'inline-block', width: '20px', height: '20px' }}></span>;
-              case 2:
-              case 3:
-                return <span key={x} style={{ background: 'red', display: 'inline-block', width: '20px', height: '20px' }}></span>;
-              default:
-                return null;
-            }
-          })}
+      <p>player_a_meiro</p>
+      <p>X: {playerPosition.x}, Y: {playerPosition.y}</p>
+      {isGameOver ? (
+          <Image src={localImage} alt="ホラー" />
+      ) : isGameClear ? (
+        <div style={{ fontSize: '24px', color: 'green' }}>ゲームクリア</div>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(9, 40px)',
+            cursor: 'none',
+            gridGap: '0px'
+          }}
+          onMouseMove={handleMouseMove}
+        >
+          {maze.map((row, rowIndex) =>
+            row.map((cell, cellIndex) => (
+              <div
+                key={`${rowIndex}-${cellIndex}`}
+                data-start={cell === 'S' ? 'true' : undefined}
+                style={{
+                  boxSizing: 'border-box',
+                  width: '40px',
+                  height: '40px',
+                  backgroundColor:
+                    cell === '#' ? 'black' :
+                    cell === 'S' ? 'green' :
+                    cell === 'G' ? 'red' :
+                    'white',
+                  cursor: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5" viewBox="0 0 2 2"><circle cx="1" cy="1" r="1" fill="black" /></svg>') 1 1, auto`
+                }}
+              ></div>
+            ))
+          )}
         </div>
-      ))}
-      {gameStatus === 'won' && <p>おめでとうございます！クリアしました！</p>}
-      {gameStatus === 'lost' && <p>ゲームオーバー！再挑戦してください。</p>}
+      )}
     </main>
   );
 }
+
