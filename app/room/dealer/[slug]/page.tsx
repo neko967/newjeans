@@ -15,7 +15,10 @@ export default function Dealer({ params }: { params: { slug: string } }) {
       if (!data.exists) {
         router.push('/waiting_room');
       } else {
-        const websocket = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}/${params.slug}`);
+        const currentHost = window.location.host; // 例: localhost:3000
+        const wsHost = currentHost.replace('3000', '8000');
+        const websocketUrl = `ws://${wsHost}/ws/${params.slug}`;
+        const websocket = new WebSocket(websocketUrl);
         setWs(websocket);
 
         websocket.onmessage = (event) => {
