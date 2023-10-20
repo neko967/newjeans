@@ -14,7 +14,6 @@ export default function Page() {
   const [isGameClear, setIsGameClear] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [hasKey, setHasKey] = useState(false);
-  
 
     // 音声を再生する関数
     const playGameOverSound = () => {
@@ -23,16 +22,19 @@ export default function Page() {
     };
 
   useEffect(() => {
-    // Move cursor to the starting position
-    const startPosition = document.querySelector('[data-start]');
-    if (startPosition) {
-      startPosition.dispatchEvent(new MouseEvent('mousemove', {
-        clientX: startPosition.getBoundingClientRect().left + 20,  // Center the cursor
-        clientY: startPosition.getBoundingClientRect().top + 20,   // Center the cursor
-        bubbles: true
-      }));
+    // Only run this effect when the game is started
+    if (isGameStarted) {
+      // Move cursor to the starting position
+      const startPosition = document.querySelector('[data-start]');
+      if (startPosition) {
+        startPosition.dispatchEvent(new MouseEvent('mousemove', {
+          clientX: startPosition.getBoundingClientRect().left + 20,  // Center the cursor
+          clientY: startPosition.getBoundingClientRect().top + 20,   // Center the cursor
+          bubbles: true
+        }));
+      }
     }
-  }, []);
+  }, [isGameStarted]);
 
   // isGameOver変数がTrueになった際に実行される
   useEffect(() => {
